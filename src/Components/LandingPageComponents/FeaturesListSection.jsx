@@ -29,14 +29,14 @@ const Feature = ({ heading, text, icon }) => {
 
 const GridListWithCTA = () => {
   return (
-    <Box as={Container} maxW="7xl" mt={14} p={4}>
+    <Box as={Container} maxW="6xl" mt={14} p={5}>
       <Grid
         templateColumns={{
           base: "repeat(1, 1fr)",
           sm: "repeat(1, 1fr)",
           md: "repeat(2, 1fr)",
         }}
-        gap={4}
+        gap={6}
       >
         <GridItem colSpan={1}>
           <VStack alignItems="flex-start" spacing="20px">
