@@ -23,9 +23,18 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
 } from "@chakra-ui/icons";
+import { useNavigate } from 'react-router-dom';
 
 const WithSubnavigation = () => {
   const { isOpen, onToggle } = useDisclosure();
+  const navigate = useNavigate();
+  const navigateToSignIn = () => {
+    navigate('/signin');
+  };
+  const navigateToSignUp = () => {
+    navigate('/signup');
+  };
+
 
   return (
     <Box position="sticky" top={0} zIndex={10} width="100%"> 
@@ -89,6 +98,7 @@ const WithSubnavigation = () => {
             variant={"button"}
             href={""}
             textDecoration={"none"}
+            onClick={navigateToSignIn}
           >
             Sign In
           </Button>
@@ -103,6 +113,7 @@ const WithSubnavigation = () => {
             _hover={{
               bg: "pink.300",
             }}
+            onClick={navigateToSignUp}
           >
             Sign Up
           </Button>

@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import {
   SimpleGrid,
   Container,
@@ -6,7 +7,6 @@ import {
   Heading,
   Box,
   InputGroup,
-  InputLeftAddon,
   InputRightElement,
   Button,
   Divider,
@@ -20,13 +20,18 @@ import {
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import axios from "axios";
-import { auth, provider } from "../../firebaseConfig";
+import { auth, provider } from "../../services/firebaseConfig";
 import { signInWithPopup } from "firebase/auth";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "../../services/firebaseConfig";
+import { useToast } from "@chakra-ui/react";
+
 
 const SignInPage = () => {
   const [show, setShow] = useState(false);
   const handleClick = () => setShow(!show);
+  const toast = useToast();
+
 
   const {
     register,
@@ -36,17 +41,44 @@ const SignInPage = () => {
 
   const onSubmit = async (values) => {
     try {
-      const response = await axios.get(
-        `http://localhost:3001/users?email=${values.email}`
+      const userQuery = query(
+        collection(db, "users"),
+        where("emailid", "==", values.emailid, "password", "==", values.password)
       );
-      if (response.data.length > 0) {
-        console.log("user is already registered");
+
+      const querySnapshot = await getDocs(userQuery);
+      if (!querySnapshot.empty) {
+        toast({
+          title: "Sign In Successful",
+          description: "You have successfully signed in.",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+          position: "bottom-left"
+        });
       } else {
-        await axios.post("http://localhost:3001/users", values);
+        toast({
+          title: "Sign In Failed",
+          description: "Please check your user credentials.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+          position: "bottom-left"
+        });
       }
+
+
     } catch (error) {
-      console.error("Error checking or registering user:", error);
+      toast({
+        title: "An Error Occurred",
+        description: "There was an error while signing in. Please try again later.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom-left"
+      });
     }
+
   };
 
   const handleSignIn = () => {
@@ -78,93 +110,34 @@ const SignInPage = () => {
                 fontWeight="600"
                 textAlign="center"
               >
-                Sign Up
+                Welcome Back
               </chakra.h3>
               <form onSubmit={handleSubmit(onSubmit)}>
-                <FormControl isInvalid={errors.inputField}>
-                  <Input
-                    type="text"
-                    name="firstName"
-                    placeholder="Enter your firstname"
-                    mt="5"
-                    {...register("firstName", {
-                      required: "Firstname is required",
-                    })}
-                  />
-                  {errors.firstName && (
-                    <FormErrorMessage>
-                      {errors.firstName.message}
-                    </FormErrorMessage>
-                  )}
-
-                  <Input
-                    type="text"
-                    placeholder="Enter your lastname"
-                    name="lastName"
-                    mt="5"
-                    {...register("lastName", {
-                      required: "Lastname is required",
-                    })}
-                  />
-                  {errors.lastName && (
-                    <FormErrorMessage>
-                      {errors.lastName.message}
-                    </FormErrorMessage>
-                  )}
+                <FormControl isInvalid={errors.password}>
                   <Input
                     type="email"
-                    placeholder="Enter your emailid"
-                    name="emailID"
+                    placeholder="Enter your registered emailid"
+                    name="emailid"
                     mt="5"
-                    {...register("emailID", {
+                    {...register("emailid", {
                       required: "Emailid is required",
                     })}
                   />
-                  {errors.emailID && (
+                  {errors.emailid && (
                     <FormErrorMessage>
-                      {errors.emailID.message}
+                      {errors.emailid.message}
                     </FormErrorMessage>
                   )}
-                  <InputGroup mt="5">
-                    <InputLeftAddon>+91</InputLeftAddon>
-                    <Input
-                      type="tel"
-                      placeholder="Enter your mobile number"
-                      name="phoneNumber"
-                      border="1px solid black"
-                      {...register("phoneNumber", {
-                        required: "Mobile number is required",
-                      })}
-                    />
-                  </InputGroup>
-                  {errors.phoneNumber && (
-                    <FormErrorMessage>
-                      {errors.phoneNumber.message}
-                    </FormErrorMessage>
-                  )}
+
                   <InputGroup size="md" mt="5">
                     <Input
                       pr="4.5rem"
                       type={show ? "text" : "password"}
                       placeholder="Create your password"
                       border="1px solid black"
-                      name="passWord"
-                      {...register("inputField", {
+                      name="password"
+                      {...register("password", {
                         required: "Password is required",
-                        minLength: {
-                          value: 8,
-                          message: "Password must be at least 8 characters",
-                        },
-                        maxLength: {
-                          value: 16,
-                          message:
-                            "Password must be no more than 16 characters",
-                        },
-                        pattern: {
-                          value: /(?=.*[!@#$%^&*])/,
-                          message:
-                            "Password must include at least one special character",
-                        },
                       })}
                     />
                     <InputRightElement width="4.5rem">
@@ -173,11 +146,12 @@ const SignInPage = () => {
                       </Button>
                     </InputRightElement>
                   </InputGroup>
-                  {errors.inputField && (
+                  {errors.password && (
                     <FormErrorMessage>
-                      {errors.inputField.message}
+                      {errors.password.message}
                     </FormErrorMessage>
                   )}
+
                   <Button colorScheme="blue" w="100%" type="submit" mt="5">
                     Continue with email
                   </Button>
@@ -215,9 +189,9 @@ const SignInPage = () => {
                       Continue with Google
                     </Button>
                     <Text>
-                      Existing user means?{" "}
+                      Don't have an account?{" "}
                       <Link color="teal.500" href="#">
-                       Click here to sign in
+                        Click here to sign up
                       </Link>
                     </Text>
                   </Stack>

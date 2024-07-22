@@ -1,10 +1,9 @@
-import LandingPage from "./Components/auth/LandingPage";
-import SignInPage from "./Components/auth/SignInPage";
-
+import AppRoutes from './routes/AppRoutes'
 function App() {
   return (
     <>
-      <SignInPage/>
+
+      <AppRoutes />
     </>
   );
 }
