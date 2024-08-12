@@ -18,20 +18,22 @@ import {
   FormErrorMessage,
   Link
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useState , useRef } from "react";
 import { useForm } from "react-hook-form";
 import { auth, provider } from "../../services/firebaseConfig";
 import { signInWithPopup } from "firebase/auth";
-import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
-import { db } from "../../services/firebaseConfig";
-import emailjs from '@emailjs/browser';
+
 import { useToast } from "@chakra-ui/react";
+import { useDispatch, useSelector } from 'react-redux';
+import { registerUser } from "../../redux/features/authThunk";
 
 
-const SignInPage = () => {
+const SignUpPage = () => {
   const [show, setShow] = useState(false);
   const handleClick = () => setShow(!show);
   const toast = useToast();
+  const dispatch = useDispatch();
+  const { isLoading, error, success } = useSelector((state) => state.auth);
 
   const {
     register,
@@ -39,55 +41,43 @@ const SignInPage = () => {
     formState: { errors },
   } = useForm();
 
+  const isLoadingRef = useRef(false);
+
   const onSubmit = async (values) => {
-    const templateParams = {
-      firstName: values.firstName,
-      lastName: values.lastName
-    };
-
-
-
-    try {
-      const userQuery = query(
-        collection(db, "users"),
-        where("emailid", "==", values.emailid)
-      );
-
-      const querySnapshot = await getDocs(userQuery);
-      if (!querySnapshot.empty) {
-
-        toast({
-          title: "User already registered",
-          description: "Please use a different email or try to login",
-          status: "error",
-          duration: 5000,
-          isClosable: true,
-          position: "bottom-left"
-        });
-      } else {
-
-        await addDoc(collection(db, "users"), values);
-        toast({
-          title: "Account Created",
-          description: "You have successfully signed up",
-          status: "success",
-          duration: 5000,
-          isClosable: true,
-          position: "bottom-left"
-        });
-        emailjs.send('service_j10u2dk', 'template_4zskdgl', templateParams, '27tcg4v4_jVSFKYqS')
-      }
-    }
-    catch (error) {
+    dispatch(registerUser(values));
+    if (isLoading && !isLoadingRef.current) {
+      isLoadingRef.current = true;
       toast({
-        title: "An Error Occurred",
-        description: "There was an error while signing up. Please try again later.",
-        status: "error",
+        title: 'Loading...',
+        description: 'Processing your request',
+        status: 'info',
         duration: 5000,
         isClosable: true,
-        position: "bottom-left"
+        position: 'bottom-left',
       });
     }
+    if (success) {
+      toast({
+        title: 'Success',
+        description: 'Operation completed successfully',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+        position: 'bottom-left',
+      });
+    }
+
+    if (error) {
+      toast({
+        title: 'An Error Occurred',
+        description: error,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+        position: 'bottom-left',
+      });
+    }
+
   };
 
   const handleSignIn = () => {
@@ -288,6 +278,6 @@ const SignInPage = () => {
   );
 };
 
-export default SignInPage;
+export default SignUpPage;
 
 

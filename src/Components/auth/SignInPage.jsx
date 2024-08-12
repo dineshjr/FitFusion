@@ -18,13 +18,15 @@ import {
   FormErrorMessage,
   Link
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { auth, provider } from "../../services/firebaseConfig";
 import { signInWithPopup } from "firebase/auth";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { db } from "../../services/firebaseConfig";
+
 import { useToast } from "@chakra-ui/react";
+import { useDispatch, useSelector } from 'react-redux';
+import { signInUser } from "../../redux/features/authThunk";
+
 
 
 const SignInPage = () => {
@@ -32,50 +34,49 @@ const SignInPage = () => {
   const handleClick = () => setShow(!show);
   const toast = useToast();
 
-
+  const { isLoading, error, success } = useSelector((state) => state.auth);
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
+  const dispatch = useDispatch();
+  const isLoadingRef = useRef(false);
+
 
   const onSubmit = async (values) => {
-    try {
-      const userQuery = query(
-        collection(db, "users"),
-        where("emailid", "==", values.emailid, "password", "==", values.password)
-      );
-
-      const querySnapshot = await getDocs(userQuery);
-      if (!querySnapshot.empty) {
-        toast({
-          title: "Sign In Successful",
-          description: "You have successfully signed in.",
-          status: "success",
-          duration: 5000,
-          isClosable: true,
-          position: "bottom-left"
-        });
-      } else {
-        toast({
-          title: "Sign In Failed",
-          description: "Please check your user credentials.",
-          status: "error",
-          duration: 5000,
-          isClosable: true,
-          position: "bottom-left"
-        });
-      }
-
-
-    } catch (error) {
+    dispatch(signInUser(values));
+    
+    if (isLoading && !isLoadingRef.current) {
+      isLoadingRef.current = true;
       toast({
-        title: "An Error Occurred",
-        description: "There was an error while signing in. Please try again later.",
-        status: "error",
+        title: 'Loading...',
+        description: 'Processing your request',
+        status: 'info',
         duration: 5000,
         isClosable: true,
-        position: "bottom-left"
+        position: 'bottom-left',
+      });
+    }
+    if (success) {
+      toast({
+        title: 'Success',
+        description: 'Operation completed successfully',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+        position: 'bottom-left',
+      });
+    }
+
+    if (error) {
+      toast({
+        title: 'An Error Occurred',
+        description: error,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+        position: 'bottom-left',
       });
     }
 

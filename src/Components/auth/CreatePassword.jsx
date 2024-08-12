@@ -1,27 +1,70 @@
 import { useForm } from 'react-hook-form';
-import { getFirestore, doc, updateDoc } from "firebase/firestore"; 
+import { useDispatch, useSelector } from 'react-redux';
+import { useEffect, useRef } from 'react';
+import { updateUserPassword } from '../../redux/features/authThunk';
+import { resetState } from '../../redux/features/authSlice';
+import { useToast } from "@chakra-ui/react";
 
 
 import { Box, Button, FormControl, FormLabel, Input, Heading, Text, VStack, FormErrorMessage } from '@chakra-ui/react';
 
 const CreatePassword = () => {
   const { handleSubmit, register, watch, formState: { errors, isSubmitting } } = useForm();
-  const db = getFirestore();
+  const toast = useToast();
+
+  const dispatch = useDispatch();
+  const { isLoading, error, success } = useSelector((state) => state.auth);
+  const isLoadingRef = useRef(false);
 
   const onSubmit = async (values) => {
-    const userDocRef = doc(db, "users" , "IuC12PO7gtIrmrdHGT0d"); // Replace "userId" with the actual document ID
-    const updatedData = {
-      password:values.newPassword
-    };
-    updateDoc(userDocRef , updatedData )
-    .then(() => {
-      console.log("Document successfully updated!");
-    })
-    .catch((error) => {
-      console.error("Error updating document: ", error);
-    });
-
+  // Replace with the actual user ID
+    dispatch(updateUserPassword({ newPassword: values.newPassword }));
   };
+
+  useEffect(() => {
+    if (isLoading && !isLoadingRef.current) {
+      isLoadingRef.current = true;
+      toast({
+        title: 'Loading...',
+        description: 'Updating your password',
+        status: 'info',
+        duration: 5000,
+        isClosable: true,
+        position: 'bottom-left',
+      });
+    }
+  }, [isLoading]);
+
+  useEffect(() => {
+    if (success) {
+      toast({
+        title: 'Password Updated',
+        description: 'Your password has been successfully updated.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+        position: 'bottom-left',
+      });
+      dispatch(resetState()); // Reset state after success
+      isLoadingRef.current = false; // Reset the ref
+    }
+  }, [success]);
+
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: 'Error',
+        description: error,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+        position: 'bottom-left',
+      });
+      dispatch(resetState()); // Reset state after error
+      isLoadingRef.current = false; // Reset the ref
+    }
+  }, [error]);
+
 
   return (
 

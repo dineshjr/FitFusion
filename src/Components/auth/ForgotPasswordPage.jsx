@@ -1,75 +1,74 @@
 import { useForm } from 'react-hook-form';
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { db } from "../../services/firebaseConfig";
+import { useEffect, useRef } from 'react';
+import { useToast } from "@chakra-ui/react";
+
+
+import { useDispatch, useSelector } from 'react-redux';
+import { sendPasswordResetEmail  } from '../../redux/features/authThunk';
+import { resetState } from '../../redux/features/authSlice';
 import { Box, Button, FormControl, FormLabel, Input, Heading, Text, VStack, FormErrorMessage } from '@chakra-ui/react';
-import emailjs from '@emailjs/browser';
-import { useState, useEffect } from 'react';
-import { v4 as uuidv4 } from 'uuid'; // Import UUID library
 
 const ForgotPassword = () => {
+  const dispatch = useDispatch();
+  const toast = useToast();
+
   const { handleSubmit, register, formState: { errors, isSubmitting } } = useForm();
+  const { isLoading, error, resetLinkSent } = useSelector((state) => state.auth);
+  const isLoadingRef = useRef(false);
 
-  const [linksDisabled, setLinkDisabled] = useState(false);
 
-  useEffect(() => {
-    const storedData = localStorage.getItem('resetId');
-    if (storedData) {
-      const { timestamp } = JSON.parse(storedData);
-      const currentTime = new Date().getTime();
-      const twoHoursInMilliseconds = 2 * 60 * 60 * 1000;
-
-      if (currentTime - timestamp >= twoHoursInMilliseconds) {
-        setLinkDisabled(true);
-      }
-
-      const checkTime = () => {
-        const currentTime = new Date().getTime();
-        if (currentTime - timestamp >= twoHoursInMilliseconds) {
-          setLinkDisabled(true);
-        }
-      };
-
-      const interval = setInterval(checkTime, 1000);
-
-      return () => clearInterval(interval);
-    }
-  }, []);
 
 
 
   const onSubmit = async (values) => {
-    const resetId = uuidv4();
-
-    const templateParams = {
-      resetLink: `http://localhost:5173/createpassword/${resetId}`
-    };
-    // Add your form submission logic here
-    const userQuery = query(
-      collection(db, "users"),
-      where("emailid", "==", values.emailid)
-    );
-    const querySnapshot = await getDocs(userQuery);
-    if (!querySnapshot.empty) {
-      console.log("Password Reset link has been sent please check ur email");
-      console.log(linksDisabled , "this link has been disabled after 2 hrs");
-      emailjs.send('service_j10u2dk', 'template_zswuftp', templateParams, '27tcg4v4_jVSFKYqS')
-        .then((response) => {
-          console.log('Email sent successfully!', response.status, response.text, templateParams);
-        }, (error) => {
-          console.error('Failed to send email:', error);
-        });
-      const params = {
-        resetId: resetId,
-        timestamp: new Date().getTime(),
-      };
-      localStorage.setItem('resetId', JSON.stringify(params));
-    } else {
-
-
-      console.log("Please enter the registered email id");
-    }
+    dispatch(sendPasswordResetEmail(values));
 
   };
+
+  useEffect(() => {
+    if (isLoading && !isLoadingRef.current) {
+      isLoadingRef.current = true;
+      toast({
+        title: 'Loading...',
+        description: 'Processing your request',
+        status: 'info',
+        duration: 5000,
+        isClosable: true,
+        position: 'bottom-left',
+      });
+    }
+  }, [isLoading, toast, dispatch]); // Added dispatch to the dependency array
+
+  useEffect(() => {
+    if (resetLinkSent) {
+      toast({
+        title: 'Password Reset Link Sent',
+        description: 'Please check your email for the reset link.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+        position: 'bottom-left',
+      });
+      dispatch(resetState());
+      isLoadingRef.current = false;
+    }
+  }, [resetLinkSent, toast, dispatch]); // Added dispatch to the dependency array
+
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: 'Error',
+        description: error,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+        position: 'bottom-left',
+      });
+      dispatch(resetState());
+      isLoadingRef.current = false;
+    }
+  }, [error, toast, dispatch]); // Added dispatch to the dependency array
+
 
   return (
     <Box
