@@ -1,11 +1,10 @@
-
-import LandingPage from "./Components/auth/LandingPage";
-
+import AppRoutes from './routes/AppRoutes'
 function App() {
   return (
-   
-      <LandingPage/>
-   
+    <>
+
+      <AppRoutes />
+    </>
   );
 }
 
