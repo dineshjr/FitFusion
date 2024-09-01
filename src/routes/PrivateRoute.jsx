@@ -1,6 +1,7 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import { Route, Navigate } from 'react-router-dom'
+import AuthenticatePage from '../pages/AuthenticatedPage'
 
 const Dashboard = () => <h1>Dashboard (Private)</h1>;
 const Settings = () => <h1>Settings (Private)</h1>;
@@ -17,7 +18,7 @@ export default function getPrivateRoutes() {
 				path="/dashboard"
 				element={
 					<RequireAuth>
-						<Dashboard />
+						<AuthenticatePage />
 					</RequireAuth>
 				}
 			/>
@@ -31,4 +32,4 @@ export default function getPrivateRoutes() {
 			/>
 		</React.Fragment>
 	)
-};
+}

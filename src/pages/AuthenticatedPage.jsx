@@ -1,8 +1,7 @@
-import Users from "../Components/auth/Users"
+import Users from "../Components/auth/WorkoutSetupForm"
 const AuthenticatedPage = () => {
   return (
    <>
-    AuthenticatedPage
     <Users/>
    </>
   )

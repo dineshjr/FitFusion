@@ -18,7 +18,7 @@ import {
   FormErrorMessage,
   Link
 } from "@chakra-ui/react";
-import { useState , useRef } from "react";
+import { useState , useRef , useEffect} from "react";
 import { useForm } from "react-hook-form";
 import { auth, provider } from "../../services/firebaseConfig";
 import { signInWithPopup } from "firebase/auth";
@@ -26,6 +26,7 @@ import { signInWithPopup } from "firebase/auth";
 import { useToast } from "@chakra-ui/react";
 import { useDispatch, useSelector } from 'react-redux';
 import { registerUser } from "../../redux/features/authThunk";
+import { useNavigate } from "react-router-dom";
 
 
 const SignUpPage = () => {
@@ -33,7 +34,7 @@ const SignUpPage = () => {
   const handleClick = () => setShow(!show);
   const toast = useToast();
   const dispatch = useDispatch();
-  const { isLoading, error, success } = useSelector((state) => state.auth);
+	const { isLoading, error, success,  } = useSelector((state) => state.auth);
 
   const {
     register,
@@ -42,7 +43,12 @@ const SignUpPage = () => {
   } = useForm();
 
   const isLoadingRef = useRef(false);
-
+	const navigate = useNavigate();
+  useEffect(() => {
+		if (registerUser) {
+			navigate('/dashboard')
+		}
+	}, [registerUser]);
   const onSubmit = async (values) => {
     dispatch(registerUser(values));
     if (isLoading && !isLoadingRef.current) {
